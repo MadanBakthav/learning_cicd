@@ -1,0 +1,42 @@
+name: Trigger auto deployment for ca-learn-containerapps
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ master ]
+    paths:
+    - '**'
+    - '.github/workflows/ca-learn-containerapps-AutoDeployTrigger-f0d95b73-34a3-4b29-8085-5015ef284af2.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.CALEARNCONTAINERAPPS_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: crlearncontainerapps.azurecr.io
+          registryUsername: ${{ secrets.CALEARNCONTAINERAPPS_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.CALEARNCONTAINERAPPS_REGISTRY_PASSWORD }}
+          containerAppName: ca-learn-containerapps
+          resourceGroup: rg-learn-containerapps
+          imageToBuild: crlearncontainerapps.azurecr.io/ca-learn-containerapps:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
